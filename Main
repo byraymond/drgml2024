@@ -1,0 +1,40 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jan  7 16:07:06 2024
+
+DRG ML2024 对阵排序生成
+
+@author: Raymond
+"""
+
+import random
+import itertools
+
+# 队伍名称
+group = list(range(1,11))
+# 轮空次序
+bye_circums_list = list (itertools.combinations(group, 2))  # 所有可能的轮空情况
+
+bye_circums_list_ordered = bye_circums_list.copy()   # 复制一个轮空情况并随机排序，这个步骤可以替换成指定次序
+random.Random(1).shuffle(bye_circums_list_ordered)
+
+# 建立一个对阵表
+match_list = []
+
+for bye_pair in bye_circums_list_ordered:
+    i = 0
+    round_groups = set(group) - set(bye_pair)   # 某一轮组的编号
+    
+    group1 = set(random.sample(round_groups,4))  # 从8队中抽取4队
+    group2 = round_groups - group1
+    
+    
+    while group1 in match_list or group2 in match_list:
+        group1 = set(random.sample(round_groups,4))  # 从8队中抽取4队
+        group2 = round_groups - group1
+        i += 1
+    else:
+        match_list.append(group1)
+        match_list.append(group2)
+        print (f"Loop {i} times.")
+
