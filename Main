@@ -9,6 +9,7 @@ DRG ML2024 对阵排序生成
 
 import random
 import itertools
+import pandas as pd
 
 # 队伍名称
 group = list(range(1,11))
@@ -19,22 +20,54 @@ bye_circums_list_ordered = bye_circums_list.copy()   # 复制一个轮空情况�
 random.Random(1).shuffle(bye_circums_list_ordered)
 
 # 建立一个对阵表
-match_list = []
 
-for bye_pair in bye_circums_list_ordered:
-    i = 0
-    round_groups = set(group) - set(bye_pair)   # 某一轮组的编号
-    
-    group1 = set(random.sample(round_groups,4))  # 从8队中抽取4队
-    group2 = round_groups - group1
-    
-    
-    while group1 in match_list or group2 in match_list:
-        group1 = set(random.sample(round_groups,4))  # 从8队中抽取4队
+def create_match_table (bye_circums_list_ordered):
+        
+    match_list = []     # 创建比赛列表，记录已生成的比赛，用来作为数据库进行比对是否重复
+    match_result = []   # 创建另一个比赛列表，记录每轮的最终的比赛对阵
+    for bye_pair in bye_circums_list_ordered:  # 对每种轮空情况进行循环
+        
+        i = 0  # 计个数看看生成的某一轮的时候循环了几次
+        round_groups = set(group) - set(bye_pair)   # 某一轮，打比赛的全部队伍编号
+        
+        group1 = set(random.sample(round_groups,4))  # 从8队中抽取4队，作为组1，剩下为组2，实际上顺序没差别
         group2 = round_groups - group1
-        i += 1
-    else:
-        match_list.append(group1)
-        match_list.append(group2)
-        print (f"Loop {i} times.")
+        
+        
+        while group1 in match_list or group2 in match_list:   # 这里的筛选条件可以继续补充
+            group1 = set(random.sample(round_groups,4))  # 重复上面步骤
+            group2 = round_groups - group1
+            i += 1
+            
+        else:
+            match_list.append(group1)      # 如果新生成的没有重复过，则采用，并添加进比赛列表
+            match_list.append(group2)
+            
+            group1_list = list(group1)      # 变成list然后升序排列，就是为了方便检查，没什么实际意义
+            group1_list.sort()
+            group2_list = list(group2)
+            group2_list.sort()
+            bye_pair_list = list(bye_pair)
+            bye_pair_list.sort()
+            
+            match_result.append(group1_list + group2_list + bye_pair_list)
+            
+            print (f"Loop {i} times.")
+        
+    # 输出excel最终结果
+    match_table = pd.DataFrame(match_result,
+                               columns = ["G1_Player1","G1_Player2","G1_Player3","G1_Player4",
+                                          "G2_Player1","G2_Player2","G2_Player3","G2_Player4",
+                                          "Bye1", "Bye2"],
+                               index = pd.array(list(range(1,46))))
+    match_table.to_excel(".\drgml_match_table.xlsx")
+    
+
+
+if __name__ == "__main__":
+    
+    create_match_table (bye_circums_list_ordered)
+        
+        
+
 
